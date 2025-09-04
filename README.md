@@ -9,6 +9,15 @@ O objetivo é implementar a comunicação entre Cliente e Servidor via **TCP em 
 
 ---
 
+## 👥 Integrantes do Grupo
+
+- **João Antônio de Brito Moraes** – RA: 081210028
+- **Lucas Araujo dos Santos** – RA: 081210009  
+- **Natthalie Bohm** – RA: 081210001  
+- **Renan Cesar de Araujo** – RA: 081210033
+  
+---
+
 ## 🚀 Estrutura do Projeto
 
 - `SimpleTCPServer.py` → Código do Servidor TCP.  
