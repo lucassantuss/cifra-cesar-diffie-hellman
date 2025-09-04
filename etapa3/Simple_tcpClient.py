@@ -1,13 +1,28 @@
 from socket import *
 import random
 
+# ---------------- Cifra de César ----------------
+def cifra_cesar_encrypt(texto, chave):
+    resultado = ""
+    for char in texto:
+        if char.isalpha():
+            base = ord('A') if char.isupper() else ord('a')
+            resultado += chr((ord(char) - base + chave) % 26 + base)
+        else:
+            resultado += char
+    return resultado
+
+def cifra_cesar_decrypt(texto, chave):
+    return cifra_cesar_encrypt(texto, -chave)
+
+# ---------------- Potência modular rápida ----------------
 def mod_exp(base, exp, mod):
     result = 1
     base = base % mod
     while exp > 0:
         if exp % 2 == 1:
             result = (result * base) % mod
-        exp = exp >> 1
+        exp //= 2
         base = (base * base) % mod
     return result
 
@@ -16,37 +31,39 @@ serverPort = 1300
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName, serverPort))
 
-# --- Diffie-Hellman ---
-# Recebe p, g, B do servidor
-data = clientSocket.recv(65000).decode()
-p, g, B = map(int, data.split(","))
+# Cliente escolhe p e g
+p = int(input("Digite um número primo p: "))
+g = int(input("Digite um gerador g: "))
 
-a = random.randint(1, p-2)
+# chave privada de Alice
+a = random.randint(3, p-2)
 A = mod_exp(g, a, p)
 
-# Envia A para o servidor
-clientSocket.send(str(A).encode())
+# enviar p, g, A
+clientSocket.send(f"{p},{g},{A}".encode())
 
-# Calcula chave compartilhada
-shared_key = mod_exp(B, a, p)
-print("Chave compartilhada (Cliente):", shared_key)
+# receber B
+data = clientSocket.recv(65000).decode()
+if data == "ERRO: p não é primo":
+    print("Servidor rejeitou: p não é primo.")
+    clientSocket.close()
+    exit()
 
-# --- Comunicação criptografada ---
-while True:
-    sentence = input("Input lowercase sentence: ")
-    if not sentence:
-        break
+B = int(data)
 
-    # Criptografa antes de enviar
-    encrypted = "".join(chr((ord(c) - 97 + shared_key) % 26 + 97) if c.isalpha() else c for c in sentence)
-    clientSocket.send(encrypted.encode())
+# chave secreta
+K = mod_exp(B, a, p)
+print(f"Chave secreta (cliente): {K}")
 
-    # Recebe resposta cifrada
-    response = clientSocket.recv(65000).decode()
-    print("Recebido (cifrado):", response)
+sentence = input("Input lowercase sentence: ")
 
-    # Decripta resposta
-    decrypted = "".join(chr((ord(c) - 65 - shared_key) % 26 + 65) if c.isalpha() else c for c in response)
-    print("Recebido (decriptado):", decrypted)
+# Criptografar com chave K
+encrypted = cifra_cesar_encrypt(sentence, K)
+clientSocket.send(encrypted.encode())
 
+# Receber resposta
+modifiedSentence = clientSocket.recv(65000).decode()
+decrypted = cifra_cesar_decrypt(modifiedSentence, K)
+
+print("Received from Server (after decrypt): ", decrypted)
 clientSocket.close()

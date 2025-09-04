@@ -1,36 +1,35 @@
 from socket import *
 
-# --- Funções de Criptografia ---
-def caesar_encrypt(text, shift):
-    result = ""
-    for char in text:
+def cifra_cesar_encrypt(texto, chave=3):
+    resultado = ""
+    for char in texto:
         if char.isalpha():
             base = ord('A') if char.isupper() else ord('a')
-            result += chr((ord(char) - base + shift) % 26 + base)
+            resultado += chr((ord(char) - base + chave) % 26 + base)
         else:
-            result += char
-    return result
+            resultado += char
+    return resultado
 
-def caesar_decrypt(text, shift):
-    return caesar_encrypt(text, -shift)
+def cifra_cesar_decrypt(texto, chave=3):
+    return cifra_cesar_encrypt(texto, -chave)
 
-# --- Configuração do Cliente ---
-serverName = "10.1.70.33"   # IP do servidor
+serverName = "10.1.70.33"  # IP do servidor
 serverPort = 1300
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName, serverPort))
 
-# --- Input e criptografia ---
 sentence = input("Input lowercase sentence: ")
-encrypted = caesar_encrypt(sentence, 3)
+
+# Criptografar antes de enviar
+encrypted = cifra_cesar_encrypt(sentence)
 clientSocket.send(bytes(encrypted, "utf-8"))
 
-# --- Recebe e decripta ---
+# Receber resposta criptografada
 modifiedSentence = clientSocket.recv(65000)
 text = str(modifiedSentence, "utf-8")
-decrypted = caesar_decrypt(text, 3)
 
-print("Received from Server (criptografado):", text)
-print("Received from Server (decriptado):", decrypted)
+# Decriptar antes de mostrar
+decrypted = cifra_cesar_decrypt(text)
 
+print("Received from Server (after decrypt): ", decrypted)
 clientSocket.close()

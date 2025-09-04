@@ -1,43 +1,41 @@
 from socket import *
 
-# --- Funções de Criptografia ---
-def caesar_encrypt(text, shift):
-    result = ""
-    for char in text:
+def cifra_cesar_encrypt(texto, chave=3):
+    resultado = ""
+    for char in texto:
         if char.isalpha():
             base = ord('A') if char.isupper() else ord('a')
-            result += chr((ord(char) - base + shift) % 26 + base)
+            resultado += chr((ord(char) - base + chave) % 26 + base)
         else:
-            result += char
-    return result
+            resultado += char
+    return resultado
 
-def caesar_decrypt(text, shift):
-    return caesar_encrypt(text, -shift)
+def cifra_cesar_decrypt(texto, chave=3):
+    return cifra_cesar_encrypt(texto, -chave)
 
-# --- Configuração do Servidor ---
 serverPort = 1300
-serverSocket = socket(AF_INET,SOCK_STREAM)
-serverSocket.bind(("",serverPort))
+serverSocket = socket(AF_INET, SOCK_STREAM)
+serverSocket.bind(("", serverPort))
 serverSocket.listen(5)
 
-print("TCP Server com Criptografia\n")
+print("TCP Server com Cifra de César\n")
+
 connectionSocket, addr = serverSocket.accept()
-
-# --- Recebe e decripta ---
 sentence = connectionSocket.recv(65000)
-received = str(sentence, "utf-8")
-decrypted = caesar_decrypt(received, 3)  # chave de 3 posições
-print("Recebido (criptografado):", received)
-print("Decriptado:", decrypted)
 
-# --- Processa ---
+# Converter para string
+received = str(sentence, "utf-8")
+
+# Decriptar o que veio
+decrypted = cifra_cesar_decrypt(received)
+print("Received From Client (decrypted): ", decrypted)
+
+# Processar (ex: colocar em maiúsculo)
 capitalizedSentence = decrypted.upper()
 
-# --- Criptografa e envia ---
-encryptedResponse = caesar_encrypt(capitalizedSentence, 3)
-connectionSocket.send(bytes(encryptedResponse, "utf-8"))
+# Criptografar antes de mandar de volta
+encryptedToSend = cifra_cesar_encrypt(capitalizedSentence)
+connectionSocket.send(bytes(encryptedToSend, "utf-8"))
 
-print("Enviado (decriptado):", capitalizedSentence)
-print("Enviado (criptografado):", encryptedResponse)
-
+print("Sent back to Client (encrypted): ", encryptedToSend)
 connectionSocket.close()
