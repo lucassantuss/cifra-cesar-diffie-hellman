@@ -1,5 +1,6 @@
 from socket import *
 import random
+import time
 
 # ---------------- Cifra de César ----------------
 def cifra_cesar_encrypt(texto, chave):
@@ -26,21 +27,26 @@ def mod_exp(base, exp, mod):
         base = (base * base) % mod
     return result
 
-# ---------------- Verificador de Primo ----------------
-def is_prime(n):
-    if n <= 1:
-        return False
-    if n <= 3:
-        return True
-    if n % 2 == 0 or n % 3 == 0:
-        return False
-    i = 5
-    while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
-            return False
-        i += 6
-    return True
+# ---------------- Validação de Primo com tempo ----------------
+def valida_primo_com_tempo(N):
+    start_time = time.time()
 
+    i = 2
+    while i < N:
+        R = N % i
+        if R == 0:
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print(f"{N} não é primo! (tempo: {execution_time:.6f} segundos)")
+            return False, execution_time
+        i += 1
+    else:
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"{N} é primo! (tempo: {execution_time:.6f} segundos)")
+        return True, execution_time
+
+# ---------------- Servidor ----------------
 serverPort = 1300
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(("", serverPort))
@@ -54,9 +60,9 @@ connectionSocket, addr = serverSocket.accept()
 data = connectionSocket.recv(65000).decode()
 p, g, A = map(int, data.split(","))
 
-# validar se p é primo
-if not is_prime(p):
-    print(f"Cliente enviou p={p}, mas não é primo! Encerrando...")
+# validar se p é primo e medir tempo
+eh_primo, tempo = valida_primo_com_tempo(p)
+if not eh_primo:
     connectionSocket.send("ERRO: p não é primo".encode())
     connectionSocket.close()
     exit()
